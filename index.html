@@ -6,24 +6,24 @@
   <title>Jasa Pekerja Tani Tuban</title>
   <meta name="theme-color" content="#22c55e" />
   <link rel="manifest" href="manifest.json" />
+
   <style>
-    body { font-family: sans-serif; margin: 0; background: #f0fdf4; color: #1e293b; }
-    header { background: #22c55e; color: white; display: flex; align-items: center; justify-content: center; padding: 20px; gap: 10px; }
-    header img { height: 40px; border-radius: 6px; }
-    header h1 { margin: 0; font-size: 1.5rem; }
-    .container { max-width: 800px; margin: auto; padding: 20px; }
-    form { background: #fff; padding: 20px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; }
-    button { background-color: #22c55e; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
-    .job-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; position: relative; }
-    .job-card h3 { margin: 0 0 10px; }
-    .job-card a, .job-card button.mark-terisi {
-      background: #16a34a; color: white; padding: 8px 12px; border-radius: 5px; text-decoration: none; display: inline-block; margin-top: 10px;
-    }
-    .job-card.terisi { opacity: 0.5; }
-    footer { text-align: center; font-size: 0.9rem; color: #6b7280; margin-top: 40px; }
+    body{font-family:sans-serif;margin:0;background:#f0fdf4;color:#1e293b}
+    header{background:#22c55e;color:#fff;display:flex;align-items:center;justify-content:center;padding:20px;gap:10px}
+    header img{height:40px;border-radius:6px}
+    header h1{margin:0;font-size:1.5rem}
+    .container{max-width:800px;margin:auto;padding:20px}
+    form{background:#fff;padding:20px;border-radius:10px;margin-bottom:30px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+    input,textarea{width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;border-radius:6px}
+    button{background:#22c55e;color:#fff;padding:12px;width:100%;border:none;border-radius:6px;font-size:1rem;cursor:pointer}
+    .job-card{background:#fff;border-radius:10px;box-shadow:0 2px 4px rgba(0,0,0,.1);padding:20px;margin-bottom:20px;position:relative}
+    .job-card h3{margin:0 0 10px}
+    .job-card a,.job-card button.mark-terisi{background:#16a34a;color:#fff;padding:8px 12px;border-radius:5px;text-decoration:none;display:inline-block;margin-top:10px}
+    .job-card.terisi{opacity:.5}
+    footer{text-align:center;font-size:.9rem;color:#6b7280;margin-top:40px}
   </style>
 </head>
+
 <body>
   <header>
     <img src="Logo.png" alt="Logo">
@@ -46,21 +46,24 @@
   </div>
 
   <footer>
-    Dibuat oleh <a href="https://wa.me/6289607633666" target="_blank">Mr. Begox Ndangun</a>
+    Dibuat oleh <a href="https://wa.me/6289607633666" target="_blank">Mr.&nbsp;Begox&nbsp;Ndangun</a>
   </footer>
 
+  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js')
-        .then(() => console.log("✅ Service Worker aktif"))
-        .catch(err => console.log("❌ SW gagal:", err));
+        .then(() => console.log('✅ Service Worker aktif'))
+        .catch(err => console.log('❌ SW gagal:', err));
     }
   </script>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+  <!-- Firebase compat CDN (tanpa ES module) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
+  <script>
+    /* Konfigurasi Firebase */
     const firebaseConfig = {
       apiKey: "AIzaSyBk-lH9FOn2qzuJgjYJAhL6z4KuiCzI8zA",
       authDomain: "jasa-pekerja-tani-tuban.firebaseapp.com",
@@ -71,63 +74,78 @@
       measurementId: "G-2KLMXXT0TY"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    /* Inisialisasi */
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    document.getElementById("formPekerjaan").addEventListener("submit", async (e) => {
+    /* Submit Form */
+    document.getElementById('formPekerjaan').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const judul = document.getElementById("judul").value;
-      const tanggal = document.getElementById("tanggal").value;
-      const upah = document.getElementById("upah").value;
-      const deskripsi = document.getElementById("deskripsi").value;
-      const wa = document.getElementById("wa").value;
+      const judul     = document.getElementById('judul').value.trim();
+      const tanggal   = document.getElementById('tanggal').value;
+      const upah      = document.getElementById('upah').value.trim();
+      const deskripsi = document.getElementById('deskripsi').value.trim();
+      const wa        = document.getElementById('wa').value.trim();
 
       try {
-        await addDoc(collection(db, "pekerjaan"), {
-          judul, tanggal, upah, deskripsi, wa, status: "tersedia"
+        await db.collection('pekerjaan').add({
+          judul, tanggal, upah, deskripsi, wa,
+          status: 'tersedia',
+          dibuat: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("✅ Lowongan berhasil ditambahkan!");
+        alert('✅ Lowongan berhasil ditambahkan!');
         e.target.reset();
         tampilkanLowongan();
-      } catch (error) {
-        alert("❌ Gagal menyimpan: " + error);
+      } catch (err) {
+        alert('❌ Gagal menyimpan: ' + err.message);
+        console.error(err);
       }
     });
 
+    /* Menampilkan Lowongan */
     async function tampilkanLowongan() {
-      const container = document.getElementById("daftarLowongan");
-      container.innerHTML = "<p>Memuat...</p>";
-      const snapshot = await getDocs(collection(db, "pekerjaan"));
-      container.innerHTML = "";
+      const container = document.getElementById('daftarLowongan');
+      container.innerHTML = '<p>Memuat…</p>';
+
+      const snapshot = await db.collection('pekerjaan').orderBy('dibuat','desc').get();
+      container.innerHTML = '';
 
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
-        const el = document.createElement("div");
-        el.className = "job-card";
-        if (data.status === "terisi") el.classList.add("terisi");
+        const el   = document.createElement('div');
+        el.className = 'job-card' + (data.status === 'terisi' ? ' terisi' : '');
 
         el.innerHTML = `
           <h3>${data.judul}</h3>
           <p><strong>Tanggal:</strong> ${data.tanggal}</p>
           <p><strong>Upah:</strong> ${data.upah}</p>
           <p>${data.deskripsi}</p>
-          <a href="https://wa.me/${data.wa}" target="_blank">📲 Saya Tertarik</a>
-          ${data.status === "tersedia" ? `<button class="mark-terisi">✅ Tandai Sudah Terisi</button>` : `<p><em>❌ Sudah Terisi</em></p>`}
+          <a href="https://wa.me/${data.wa}" target="_blank">📲 Saya Tertarik</a>
+          ${
+            data.status === 'tersedia'
+              ? '<button class="mark-terisi">✅ Tandai Sudah Terisi</button>'
+              : '<p><em>❌ Sudah Terisi</em></p>'
+          }
         `;
 
-        const tombol = el.querySelector(".mark-terisi");
-        if (tombol) {
-          tombol.addEventListener("click", async () => {
-            await updateDoc(doc(db, "pekerjaan", docSnap.id), { status: "terisi" });
+        /* Tombol “Tandai Sudah Terisi” */
+        const btn = el.querySelector('.mark-terisi');
+        if (btn) {
+          btn.addEventListener('click', async () => {
+            await db.collection('pekerjaan').doc(docSnap.id).update({ status: 'terisi' });
             tampilkanLowongan();
           });
         }
-
         container.appendChild(el);
       });
+
+      if (!container.children.length) {
+        container.innerHTML = '<p>Belum ada lowongan.</p>';
+      }
     }
 
+    /* Panggil pertama kali */
     tampilkanLowongan();
   </script>
 </body>
