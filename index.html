@@ -56,8 +56,23 @@
 </head>
 <body>
 
+  <h2>🔐 Admin Login</h2>
+  <div id="auth-section">
+    <div id="login-box">
+      <input type="email" id="email" placeholder="Email admin" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button id="login-btn">Login</button>
+    </div>
+    <div id="logout-box" style="display:none;">
+      <p>✅ Kamu sudah login sebagai admin</p>
+      <button id="logout-btn">Logout</button>
+    </div>
+  </div>
+
+  <hr>
+
   <h2>📝 Tambah Pekerjaan Baru</h2>
-  <form id="form-pekerjaan">
+  <form id="form-pekerjaan" style="display:none;">
     <input type="text" placeholder="Judul Pekerjaan" id="judul" required>
     <input type="text" placeholder="Jenis (contoh: Panen)" id="jenis" required>
     <input type="text" placeholder="Tanggal (contoh: 2025-07-15)" id="tanggal" required>
@@ -77,12 +92,8 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      getDocs,
-      addDoc
-    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBk-lH9FOn2qzuJgjYJAhL6z4KuiCzI8zA",
@@ -96,7 +107,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-
+    const auth = getAuth(app);
     const container = document.getElementById("list-pekerjaan");
     const allData = [];
 
@@ -129,7 +140,6 @@
     });
     tampilkanData(allData);
 
-    // 🔍 Fitur pencarian
     document.getElementById("search").addEventListener("input", (e) => {
       const keyword = e.target.value.toLowerCase();
       const hasil = allData.filter(item =>
@@ -139,7 +149,6 @@
       tampilkanData(hasil);
     });
 
-    // Tambah pekerjaan baru
     const form = document.getElementById("form-pekerjaan");
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -159,6 +168,37 @@
         console.error(err);
         alert("❌ Gagal menambahkan data.");
       }
+    });
+
+    const loginBox = document.getElementById("login-box");
+    const logoutBox = document.getElementById("logout-box");
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        form.style.display = "block";
+        loginBox.style.display = "none";
+        logoutBox.style.display = "block";
+      } else {
+        form.style.display = "none";
+        loginBox.style.display = "block";
+        logoutBox.style.display = "none";
+      }
+    });
+
+    document.getElementById("login-btn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        alert("✅ Login berhasil");
+      } catch (err) {
+        alert("❌ Gagal login: " + err.message);
+      }
+    });
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await signOut(auth);
+      alert("✅ Logout berhasil");
     });
   </script>
 
