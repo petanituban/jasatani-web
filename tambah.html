@@ -1,0 +1,114 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Tambah Pekerjaan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#22c55e" />
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background-color: #f0fdf4;
+    }
+    h2 {
+      color: #166534;
+    }
+    form {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin: auto;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #22c55e;
+      color: white;
+      padding: 10px;
+      width: 100%;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h2>➕ Tambah Pekerjaan</h2>
+
+<form id="jobForm">
+  <input type="text" id="judul" placeholder="Judul Pekerjaan" required>
+  <select id="jenis">
+    <option value="">Pilih Jenis</option>
+    <option value="Tanam">Tanam</option>
+    <option value="Panen">Panen</option>
+    <option value="Bajak">Bajak</option>
+  </select>
+  <input type="text" id="lokasi" placeholder="Lokasi" required>
+  <input type="date" id="tanggal" required>
+  <input type="number" id="upah" placeholder="Upah per hari (Rp)" required>
+  <input type="text" id="wa" placeholder="Nomor WhatsApp" required>
+  <button type="submit">Kirim</button>
+</form>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBk-lH9FOn2qzuJgjYJAhL6z4KuiCzI8zA",
+    authDomain: "jasa-pekerja-tani-tuban.firebaseapp.com",
+    projectId: "jasa-pekerja-tani-tuban",
+    storageBucket: "jasa-pekerja-tani-tuban.firebasestorage.app",
+    messagingSenderId: "865622442089",
+    appId: "1:865622442089:web:20a149b7f101957594a2f8",
+    measurementId: "G-2KLMXXT0TY"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  document.getElementById("jobForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const data = {
+      judul: document.getElementById("judul").value,
+      jenis: document.getElementById("jenis").value,
+      lokasi: document.getElementById("lokasi").value,
+      tanggal: document.getElementById("tanggal").value,
+      upah: parseInt(document.getElementById("upah").value),
+      wa: document.getElementById("wa").value
+    };
+
+    await addDoc(collection(db, "pekerjaan"), data);
+
+    // Format pesan WA ke admin
+    const pesan = `Ada pekerjaan baru ditambahkan:%0A` +
+      `Judul: ${data.judul}%0A` +
+      `Jenis: ${data.jenis}%0A` +
+      `Lokasi: ${data.lokasi}%0A` +
+      `Tanggal: ${data.tanggal}%0A` +
+      `Upah: Rp${data.upah}%0A` +
+      `WA Pengirim: ${data.wa}`;
+
+    const noAdmin = "628960863366"; // nomor admin
+    window.open(`https://wa.me/${noAdmin}?text=${pesan}`, "_blank");
+
+    alert("Pekerjaan berhasil ditambahkan dan WA admin telah dikirim!");
+    document.getElementById("jobForm").reset();
+  });
+</script>
+
+</body>
+</html>
