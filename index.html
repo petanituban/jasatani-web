@@ -1,141 +1,153 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Jasa Pekerja Tani Tuban</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#22c55e" />
+  <meta name="theme-color" content="#22c55e">
   <style>
     body {
-      font-family: sans-serif;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0fdf4;
+      color: #1e293b;
+    }
+    header {
+      background-color: #22c55e;
+      color: white;
       padding: 20px;
-      background: #f1f5f9;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    h2 {
+    .filters {
+      padding: 10px 20px;
+      text-align: center;
+    }
+    .filters button {
+      margin: 5px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 20px;
+      background-color: #bbf7d0;
       color: #065f46;
+      font-weight: 600;
+      cursor: pointer;
     }
-    .filter {
-      background: #e0f2fe;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 20px;
+    .filters button.active {
+      background-color: #22c55e;
+      color: white;
     }
-    .filter select, .filter input {
-      margin-right: 10px;
-      padding: 8px;
+    #jobList {
+      padding: 20px;
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     }
-    .job {
+    .job-card {
       background: white;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-    .job h3 {
+    .job-card h3 {
       margin-top: 0;
+      font-size: 1.1rem;
+      color: #16a34a;
     }
-    .job a {
-      background: #22c55e;
+    .job-card p {
+      margin: 5px 0;
+      font-size: 0.95rem;
+    }
+    .job-card a {
+      display: inline-block;
+      margin-top: 10px;
+      background: #16a34a;
       color: white;
       padding: 8px 12px;
+      border-radius: 6px;
       text-decoration: none;
-      border-radius: 5px;
-      display: inline-block;
-      margin-top: 5px;
     }
   </style>
 </head>
 <body>
-  <h2>🔍 Cari Pekerjaan Tani</h2>
-  <div class="filter">
-    <select id="jenisFilter">
-      <option value="">Semua Jenis</option>
-      <option value="Tanam">Tanam</option>
-      <option value="Panen">Panen</option>
-      <option value="Bajak">Bajak</option>
-    </select>
-    <input type="text" id="lokasiFilter" placeholder="Lokasi (contoh: Tuban)">
-    <input type="date" id="tanggalFilter">
-    <button onclick="resetFilter()">Reset</button>
-  </div>
 
-  <div id="jobList">Memuat data...</div>
+<header>
+  🌾 Jasa Pekerja Tani Tuban
+</header>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+<div class="filters">
+  <button onclick="filterKategori('')" class="active">Semua</button>
+  <button onclick="filterKategori('Tanam')">Tanam</button>
+  <button onclick="filterKategori('Panen')">Panen</button>
+  <button onclick="filterKategori('Bajak')">Bajak</button>
+</div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBk-lH9FOn2qzuJgjYJAhL6z4KuiCzI8zA",
-      authDomain: "jasa-pekerja-tani-tuban.firebaseapp.com",
-      projectId: "jasa-pekerja-tani-tuban",
-      storageBucket: "jasa-pekerja-tani-tuban.firebasestorage.app",
-      messagingSenderId: "865622442089",
-      appId: "1:865622442089:web:20a149b7f101957594a2f8",
-      measurementId: "G-2KLMXXT0TY"
-    };
+<div id="jobList">Memuat data...</div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-    const jobList = document.getElementById("jobList");
+  const firebaseConfig = {
+    apiKey: "AIzaSyBk-lH9FOn2qzuJgjYJAhL6z4KuiCzI8zA",
+    authDomain: "jasa-pekerja-tani-tuban.firebaseapp.com",
+    projectId: "jasa-pekerja-tani-tuban",
+    storageBucket: "jasa-pekerja-tani-tuban.firebasestorage.app",
+    messagingSenderId: "865622442089",
+    appId: "1:865622442089:web:20a149b7f101957594a2f8",
+    measurementId: "G-2KLMXXT0TY"
+  };
 
-    let semuaData = [];
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    async function fetchData() {
-      const snapshot = await getDocs(collection(db, "pekerjaan"));
-      semuaData = [];
-      snapshot.forEach(doc => {
-        semuaData.push(doc.data());
-      });
-      tampilkanData();
+  let semuaData = [];
+  const jobList = document.getElementById("jobList");
+
+  async function ambilData() {
+    const snapshot = await getDocs(collection(db, "pekerjaan"));
+    semuaData = [];
+    snapshot.forEach(doc => semuaData.push(doc.data()));
+    tampilkanData("");
+  }
+
+  function tampilkanData(filterJenis) {
+    const tombol = document.querySelectorAll(".filters button");
+    tombol.forEach(btn => btn.classList.remove("active"));
+    const aktif = Array.from(tombol).find(btn => btn.textContent === filterJenis || (filterJenis === "" && btn.textContent === "Semua"));
+    if (aktif) aktif.classList.add("active");
+
+    const hasil = semuaData.filter(item => !filterJenis || item.jenis === filterJenis);
+
+    if (hasil.length === 0) {
+      jobList.innerHTML = "<p style='padding:10px;'>Tidak ada pekerjaan ditemukan.</p>";
+      return;
     }
 
-    function tampilkanData() {
-      const jenis = document.getElementById("jenisFilter").value;
-      const lokasi = document.getElementById("lokasiFilter").value.toLowerCase();
-      const tanggal = document.getElementById("tanggalFilter").value;
+    jobList.innerHTML = "";
+    hasil.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "job-card";
+      div.innerHTML = `
+        <h3>${item.judul}</h3>
+        <p><strong>Jenis:</strong> ${item.jenis}</p>
+        <p><strong>Lokasi:</strong> ${item.lokasi}</p>
+        <p><strong>Tanggal:</strong> ${item.tanggal}</p>
+        <p><strong>Upah:</strong> Rp${item.upah}</p>
+        <a href="https://wa.me/${item.wa.replace(/^0/, '62')}" target="_blank">Hubungi via WA</a>
+      `;
+      jobList.appendChild(div);
+    });
+  }
 
-      let hasil = semuaData.filter(item => {
-        const cocokJenis = jenis === "" || item.jenis === jenis;
-        const cocokLokasi = lokasi === "" || item.lokasi.toLowerCase().includes(lokasi);
-        const cocokTanggal = tanggal === "" || item.tanggal >= tanggal;
-        return cocokJenis && cocokLokasi && cocokTanggal;
-      });
+  function filterKategori(kategori) {
+    tampilkanData(kategori);
+  }
 
-      if (hasil.length === 0) {
-        jobList.innerHTML = "<p>Tidak ada pekerjaan ditemukan.</p>";
-        return;
-      }
+  ambilData();
+</script>
 
-      jobList.innerHTML = "";
-      hasil.forEach((item, i) => {
-        const div = document.createElement("div");
-        div.className = "job";
-        div.innerHTML = `
-          <h3>${item.judul}</h3>
-          <p><strong>Jenis:</strong> ${item.jenis}</p>
-          <p><strong>Lokasi:</strong> ${item.lokasi}</p>
-          <p><strong>Tanggal:</strong> ${item.tanggal}</p>
-          <p><strong>Upah:</strong> Rp${item.upah}</p>
-          <a href="https://wa.me/${item.wa.replace(/^0/, '62')}" target="_blank">Hubungi via WA</a>
-        `;
-        jobList.appendChild(div);
-      });
-    }
-
-    function resetFilter() {
-      document.getElementById("jenisFilter").value = "";
-      document.getElementById("lokasiFilter").value = "";
-      document.getElementById("tanggalFilter").value = "";
-      tampilkanData();
-    }
-
-    document.getElementById("jenisFilter").addEventListener("change", tampilkanData);
-    document.getElementById("lokasiFilter").addEventListener("input", tampilkanData);
-    document.getElementById("tanggalFilter").addEventListener("change", tampilkanData);
-
-    fetchData();
-  </script>
 </body>
 </html>
