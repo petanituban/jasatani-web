@@ -9,10 +9,10 @@
     body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #f0fdf4; color: #1e293b; }
     header { background-color: #22c55e; color: white; text-align: center; padding: 20px; font-size: 1.5rem; font-weight: bold; }
     .container { max-width: 900px; margin: auto; padding: 20px; }
-    .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; margin-bottom: 20px; }
-    .calendar div { padding: 10px; background: #fff; border-radius: 6px; cursor: pointer; }
-    .calendar .header { font-weight: bold; background: #bbf7d0; }
-    .calendar .active { background: #22c55e; color: white; }
+    .calendar, .week-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; margin-bottom: 20px; }
+    .calendar div, .week-calendar div { padding: 10px; background: #fff; border-radius: 6px; cursor: pointer; }
+    .calendar .header, .week-calendar .header { font-weight: bold; background: #bbf7d0; }
+    .calendar .active, .week-calendar .active { background: #22c55e; color: white; }
     .job-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
     .job-card h3 { margin: 0; color: #16a34a; }
     .job-card img { max-width: 100%; border-radius: 10px; margin-top: 10px; }
@@ -21,6 +21,7 @@
     form { background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-top: 40px; }
     input, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
     button { background-color: #22c55e; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+    #map { width: 100%; height: 300px; border-radius: 10px; margin: 20px 0; }
     footer { text-align: center; margin: 40px 0 20px; color: #64748b; font-size: 0.9rem; }
     footer a { color: #16a34a; text-decoration: none; }
   </style>
@@ -30,8 +31,11 @@
 <header>🌾 Jasa Pekerja Tani Tuban</header>
 
 <div class="container">
-  <h2>📅 Kalender Pekerjaan</h2>
-  <div id="calendar" class="calendar"></div>
+  <h2>🗺️ Lokasi Pekerjaan di Google Maps</h2>
+  <div id="map"></div>
+
+  <h2>📆 Kalender Mingguan</h2>
+  <div id="weekCalendar" class="week-calendar"></div>
 
   <h2>🔍 Filter Pekerjaan</h2>
   <select id="filterJenis"><option value="">Semua Jenis</option><option value="Tanam">Tanam</option><option value="Panen">Panen</option><option value="Bajak">Bajak</option></select>
@@ -64,6 +68,7 @@
   Pengembang aplikasi oleh <a href="https://wa.me/6289607633666" target="_blank">Mr.Begox Ndangun</a>
 </footer>
 
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
   import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
@@ -84,32 +89,42 @@
 
   let semuaData = [];
   const jobList = document.getElementById("jobList");
-  const calendarEl = document.getElementById("calendar");
+  let map;
 
-  function generateCalendar(jobs) {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    calendarEl.innerHTML = "";
-    ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"].forEach(d => {
-      const day = document.createElement("div");
-      day.className = "header";
-      day.textContent = d;
-      calendarEl.appendChild(day);
-    });
-
-    const firstDay = new Date(year, month, 1).getDay();
-    for (let i = 0; i < firstDay; i++) {
-      calendarEl.appendChild(document.createElement("div"));
+  async function initMap(locations = []) {
+    if (!map) {
+      map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 10,
+        center: { lat: -6.9, lng: 112.05 } // default Tuban
+      });
     }
-    for (let day = 1; day <= daysInMonth; day++) {
-      const tanggal = `${year}-${(month+1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-      const cell = document.createElement("div");
-      cell.textContent = day;
-      cell.onclick = () => tampilkanData(tanggal);
-      calendarEl.appendChild(cell);
+    locations.forEach(async (item) => {
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ address: item.lokasi }, (results, status) => {
+        if (status === "OK") {
+          new google.maps.Marker({
+            map,
+            position: results[0].geometry.location,
+            title: item.judul
+          });
+        }
+      });
+    });
+  }
+
+  function tampilkanMingguan() {
+    const container = document.getElementById("weekCalendar");
+    container.innerHTML = "";
+    const hari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+    const now = new Date();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(now.getDate() + i);
+      const tgl = d.toISOString().slice(0,10);
+      const div = document.createElement("div");
+      div.innerHTML = `<strong>${hari[d.getDay()]}</strong><br>${tgl}`;
+      div.onclick = () => tampilkanData(tgl);
+      container.appendChild(div);
     }
   }
 
@@ -133,6 +148,7 @@
       `;
       jobList.appendChild(div);
     });
+    initMap(hasil);
   }
 
   function tampilkanDataFiltered() {
@@ -176,7 +192,7 @@
   async function ambilData() {
     const snapshot = await getDocs(collection(db, "pekerjaan"));
     semuaData = snapshot.docs.map(doc => doc.data());
-    generateCalendar(semuaData);
+    tampilkanMingguan();
     tampilkanData();
   }
 
