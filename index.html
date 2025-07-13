@@ -17,7 +17,7 @@
     .job-card h3 { margin: 0; color: #16a34a; }
     .job-card img { max-width: 100%; border-radius: 10px; margin-top: 10px; }
     .job-card iframe { width: 100%; height: 200px; border: none; border-radius: 8px; margin-top: 10px; }
-    .job-card a { display: inline-block; margin-top: 10px; background-color: #16a34a; color: white; padding: 8px 12px; border-radius: 5px; text-decoration: none; }
+    .job-card a { display: inline-block; margin-top: 10px; background-color: #16a34a; color: white; padding: 8px 12px; border-radius: 5px; text-decoration: none; margin-right: 10px; }
     form { background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-top: 40px; }
     input, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
     button { background-color: #22c55e; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
@@ -95,7 +95,7 @@
     if (!map) {
       map = new google.maps.Map(document.getElementById("map"), {
         zoom: 10,
-        center: { lat: -6.9, lng: 112.05 } // default Tuban
+        center: { lat: -6.9, lng: 112.05 }
       });
     }
     locations.forEach(async (item) => {
@@ -136,6 +136,7 @@
       const div = document.createElement("div");
       div.className = "job-card";
       const mapURL = `https://www.google.com/maps?q=${encodeURIComponent(job.lokasi)}&output=embed`;
+      const waNomor = job.wa.replace(/^0/, "62");
       div.innerHTML = `
         <h3>${job.judul}</h3>
         ${job.gambar ? `<img src="${job.gambar}" alt="Gambar Pekerjaan">` : ""}
@@ -144,7 +145,8 @@
         <p><strong>Tanggal:</strong> ${job.tanggal}</p>
         <p><strong>Upah:</strong> Rp${job.upah}</p>
         <iframe src="${mapURL}" loading="lazy"></iframe>
-        <a href="https://wa.me/${job.wa.replace(/^0/, '62')}" target="_blank">Hubungi via WhatsApp</a>
+        <a href="https://wa.me/${waNomor}" target="_blank">Hubungi via WhatsApp</a>
+        <a href="https://wa.me/${waNomor}?text=Halo%2C+saya+tertarik+melamar+pekerjaan+${encodeURIComponent(job.judul)}+di+${encodeURIComponent(job.lokasi)}+pada+${job.tanggal}" target="_blank">Saya Tertarik</a>
       `;
       jobList.appendChild(div);
     });
