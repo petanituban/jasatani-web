@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://petanituban.github.io/jasatani-web/sitemap.xml
