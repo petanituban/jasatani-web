@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Admin - Jasa Tani Tuban</title>
+  <meta name="theme-color" content="#3b82f6">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9fafb;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h2 {
+      color: #1e293b;
+    }
+    .stat {
+      background: #3b82f6;
+      color: white;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+    .pekerjaan {
+      background: white;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #ef4444;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #dc2626;
+    }
+  </style>
+</head>
+<body>
+  <h2>📊 Dashboard Admin</h2>
+  <div id="stats" class="stat">Loading statistik...</div>
+  <div id="list-pekerjaan">Memuat data...</div>
+  <button id="logout-btn">Logout</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBk-lH9FOn2qzuJgjYJAhL6z4KuiCzI8zA",
+      authDomain: "jasa-pekerja-tani-tuban.firebaseapp.com",
+      projectId: "jasa-pekerja-tani-tuban",
+      storageBucket: "jasa-pekerja-tani-tuban.firebasestorage.app",
+      messagingSenderId: "865622442089",
+      appId: "1:865622442089:web:20a149b7f101957594a2f8",
+      measurementId: "G-2KLMXXT0TY"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const statsDiv = document.getElementById("stats");
+    const listDiv = document.getElementById("list-pekerjaan");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "index.html"; // redirect jika belum login
+        return;
+      }
+
+      const snapshot = await getDocs(collection(db, "pekerjaan"));
+      const data = [];
+      const jenisCount = {};
+      snapshot.forEach((doc) => {
+        const d = doc.data();
+        data.push(d);
+        if (jenisCount[d.jenis]) {
+          jenisCount[d.jenis]++;
+        } else {
+          jenisCount[d.jenis] = 1;
+        }
+      });
+
+      statsDiv.innerHTML = `
+        <p><strong>Total Pekerjaan:</strong> ${data.length}</p>
+        <p><strong>Statistik per Jenis:</strong></p>
+        <ul>
+          ${Object.keys(jenisCount).map(j => `<li>${j}: ${jenisCount[j]}</li>`).join("")}
+        </ul>
+      `;
+
+      listDiv.innerHTML = "";
+      data.forEach((item, i) => {
+        const div = document.createElement("div");
+        div.className = "pekerjaan";
+        div.innerHTML = `
+          <h3>${i+1}. ${item.judul}</h3>
+          <p><strong>Jenis:</strong> ${item.jenis}</p>
+          <p><strong>Tanggal:</strong> ${item.tanggal}</p>
+          <p><strong>Lokasi:</strong> ${item.lokasi}</p>
+          <p><strong>Upah:</strong> Rp${item.upah}</p>
+          <p><strong>WA:</strong> ${item.wa}</p>
+        `;
+        listDiv.appendChild(div);
+      });
+    });
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>
