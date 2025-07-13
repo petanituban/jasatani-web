@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jasa Pekerja Tani Tuban</title>
+  <meta name="theme-color" content="#22c55e" />
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    body{font-family:sans-serif;margin:0;background:#f0fdf4;color:#1e293b}
+    header{background:#22c55e;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 20px}
+    header div.title{display:flex;align-items:center;gap:10px}
+    header img{height:40px;border-radius:6px}
+    header h1{margin:0;font-size:1.2rem}
+    header .auth{display:flex;gap:10px}
+    button.auth-btn{background:#fff;color:#22c55e;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-weight:600}
+    .container{max-width:800px;margin:auto;padding:20px}
+    form{background:#fff;padding:20px;border-radius:10px;margin-bottom:30px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+    input,textarea{width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;border-radius:6px}
+    button.submit{background:#22c55e;color:#fff;padding:12px;width:100%;border:none;border-radius:6px;font-size:1rem;cursor:pointer}
+    .job-card{background:#fff;border-radius:10px;box-shadow:0 2px 4px rgba(0,0,0,.1);padding:20px;margin-bottom:20px}
+    .job-card.terisi{opacity:.5}
+    .job-card a,.job-card button.mark-terisi{background:#16a34a;color:#fff;padding:8px 12px;border:none;border-radius:6px;text-decoration:none;margin-top:10px;display:inline-block}
+    .job-card button[disabled]{background:#9ca3af}
+    footer{text-align:center;font-size:.9rem;color:#6b7280;margin:40px 0}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">
+      <img src="Logo.png" alt="Logo">
+      <h1>Jasa Pekerja Tani Tuban</h1>
+    </div>
+    <div class="auth">
+      <span id="userInfo" style="color:#fff;"></span>
+      <button id="loginBtn" class="auth-btn">Login</button>
+      <button id="logoutBtn" class="auth-btn" style="display:none;">Logout</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <h2>Pasang Lowongan</h2>
+    <form id="formPekerjaan">
+      <input type="text" id="judul" placeholder="Judul Pekerjaan" required />
+      <input type="date" id="tanggal" required />
+      <input type="text" id="upah" placeholder="Upah (Rp)" required />
+      <textarea id="deskripsi" placeholder="Deskripsi Pekerjaan" required></textarea>
+      <input type="text" id="wa" placeholder="Nomor WA (628xxxxxx)" required />
+      <button type="submit" class="submit">📢 Pasang Lowongan</button>
+    </form>
+
+    <h2>📋 Daftar Lowongan</h2>
+    <div id="daftarLowongan"><p>Memuat data...</p></div>
+  </div>
+
+  <footer>
+    Dibuat oleh <a href="https://wa.me/6289607633666" target="_blank">Mr. Begox Ndangun</a>
+  </footer>
+
+  <!-- Firebase SDK via ES module -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+    // 1. Konfigurasi Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCWI_6BARGGu8WfHwyAU7WR-KCaTwNIB30",
+      authDomain: "jasa-pekerja-tani-tuban-6a972.firebaseapp.com",
+      projectId: "jasa-pekerja-tani-tuban-6a972",
+      storageBucket: "jasa-pekerja-tani-tuban-6a972.appspot.com",
+      messagingSenderId: "202591906654",
+      appId: "1:202591906654:web:754c531b44508821033dcf"
+    };
+
+    // 2. Inisialisasi
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    // 3. State user
+    let currentUser = null;
+
+    const loginBtn  = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userInfo  = document.getElementById('userInfo');
+
+    loginBtn.onclick = () => signInWithPopup(auth, provider).catch(err => alert('Login gagal: '+err.message));
+    logoutBtn.onclick = () => signOut(auth);
+
+    onAuthStateChanged(auth, user => {
+      currentUser = user;
+      if (user) {
+        userInfo.textContent = user.displayName;
+        loginBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+      } else {
+        userInfo.textContent = '';
+        loginBtn.style.display = 'inline-block';
+        logoutBtn.style.display = 'none';
+      }
+      tampilkanLowongan(); // refresh daftar agar tombol edit sesuai user
+    });
+
+    // 4. Kirim form
+    document.getElementById('formPekerjaan').addEventListener('submit', async e => {
+      e.preventDefault();
+      if (!currentUser) {
+        alert('Silakan login dahulu untuk memasang lowongan.');
+        return;
+      }
+      const judul     = document.getElementById('judul').value.trim();
+      const tanggal   = document.getElementById('tanggal').value;
+      const upah      = document.getElementById('upah').value.trim();
+      const deskripsi = document.getElementById('deskripsi').value.trim();
+      const wa        = document.getElementById('wa').value.trim();
+
+      try {
+        await addDoc(collection(db, 'pekerjaan'), {
+          judul, tanggal, upah, deskripsi, wa,
+          status: 'tersedia',
+          uid: currentUser.uid,
+          dibuat: Date.now()
+        });
+        alert('✅ Lowongan berhasil ditambahkan!');
+        e.target.reset();
+        tampilkanLowongan();
+      } catch (err) {
+        console.error(err);
+        alert('❌ Gagal menyimpan: '+err.message);
+      }
+    });
+
+    // 5. Tampilkan daftar lowongan
+    async function tampilkanLowongan() {
+      const container = document.getElementById('daftarLowongan');
+      container.innerHTML = '<p>Memuat...</p>';
+      try {
+        const snap = await getDocs(collection(db, 'pekerjaan'));
+        container.innerHTML = '';
+        snap.forEach(docSnap => {
+          const data = docSnap.data();
+          const card = document.createElement('div');
+          card.className = 'job-card' + (data.status === 'terisi' ? ' terisi' : '');
+          card.innerHTML = `
+            <h3>${data.judul}</h3>
+            <p><strong>Tanggal:</strong> ${data.tanggal}</p>
+            <p><strong>Upah:</strong> ${data.upah}</p>
+            <p>${data.deskripsi}</p>
+            <a href="https://wa.me/${data.wa}" target="_blank">📲 Saya Tertarik</a>
+            ${data.status === 'tersedia'
+              ? '<button class="mark-terisi">✅ Tandai Sudah Terisi</button>'
+              : '<p><em>❌ Sudah Terisi</em></p>'
+            }
+          `;
+          const btn = card.querySelector('.mark-terisi');
+          if (btn) {
+            if (currentUser && currentUser.uid === data.uid) {
+              btn.addEventListener('click', async () => {
+                await updateDoc(doc(db, 'pekerjaan', docSnap.id), { status: 'terisi' });
+                tampilkanLowongan();
+              });
+            } else {
+              btn.disabled = true;
+              btn.textContent = 'Hanya pembuat';
+            }
+          }
+          container.appendChild(card);
+        });
+        if (!container.innerHTML) container.innerHTML = '<p>Belum ada lowongan.</p>';
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = '<p style="color:red">❌ Gagal memuat: '+err.message+'</p>';
+      }
+    }
+
+    // panggil awal
+    tampilkanLowongan();
+  </script>
+</body>
+</html>
