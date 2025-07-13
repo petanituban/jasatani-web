@@ -5,200 +5,113 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Jasa Pekerja Tani Tuban</title>
   <meta name="theme-color" content="#22c55e" />
+  <link rel="manifest" href="manifest.json" />
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log("✅ Service Worker aktif"))
+        .catch(err => console.error("❌ Gagal:", err));
+    }
+  </script>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #f0fdf4; color: #1e293b; }
-    header { background-color: #22c55e; color: white; text-align: center; padding: 20px; font-size: 1.5rem; font-weight: bold; }
-    .container { max-width: 900px; margin: auto; padding: 20px; }
-    .calendar, .week-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; margin-bottom: 20px; }
-    .calendar div, .week-calendar div { padding: 10px; background: #fff; border-radius: 6px; cursor: pointer; }
-    .calendar .header, .week-calendar .header { font-weight: bold; background: #bbf7d0; }
-    .calendar .active, .week-calendar .active { background: #22c55e; color: white; }
-    .job-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
-    .job-card h3 { margin: 0; color: #16a34a; }
-    .job-card img { max-width: 100%; border-radius: 10px; margin-top: 10px; }
-    .job-card iframe { width: 100%; height: 200px; border: none; border-radius: 8px; margin-top: 10px; }
-    .job-card a { display: inline-block; margin-top: 10px; background-color: #16a34a; color: white; padding: 8px 12px; border-radius: 5px; text-decoration: none; margin-right: 10px; }
-    form { background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-top: 40px; }
-    input, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
-    button { background-color: #22c55e; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
-    #map { width: 100%; height: 300px; border-radius: 10px; margin: 20px 0; }
-    footer { text-align: center; margin: 40px 0 20px; color: #64748b; font-size: 0.9rem; }
-    footer a { color: #16a34a; text-decoration: none; }
+    body { font-family: sans-serif; background: #f0fdf4; margin: 0; color: #1e293b; }
+    header { background: #22c55e; color: white; padding: 1rem; text-align: center; font-size: 1.5rem; }
+    .container { max-width: 800px; margin: auto; padding: 1rem; }
+    .job-card { background: #fff; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 0 6px #ccc; }
+    .job-card img { width: 100%; border-radius: 8px; margin-top: 0.5rem; }
+    .job-card iframe { width: 100%; height: 200px; margin-top: 0.5rem; border: none; border-radius: 8px; }
+    .job-card a { display: inline-block; margin-top: 0.5rem; background: #22c55e; color: #fff; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; }
+    form { background: #fff; padding: 1rem; border-radius: 10px; margin-top: 2rem; box-shadow: 0 0 6px #ccc; }
+    input, select, textarea { width: 100%; padding: 0.5rem; margin-top: 0.5rem; margin-bottom: 1rem; border-radius: 6px; border: 1px solid #ccc; }
+    button { background: #22c55e; color: white; padding: 0.75rem; border: none; width: 100%; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+    footer { text-align: center; padding: 1rem; font-size: 0.9rem; color: #64748b; }
+    .filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem; }
+    .filters select { flex: 1; }
   </style>
 </head>
 <body>
+  <header>Jasa Pekerja Tani Tuban</header>
+  <div class="container">
 
-<header>🌾 Jasa Pekerja Tani Tuban</header>
+    <!-- 🔍 Filter Lanjutan -->
+    <div class="filters">
+      <select id="filter-kategori"><option value="">Kategori</option></select>
+      <select id="filter-lokasi"><option value="">Lokasi</option></select>
+      <select id="filter-upah"><option value="">Upah</option></select>
+    </div>
 
-<div class="container">
-  <h2>🗺️ Lokasi Pekerjaan di Google Maps</h2>
-  <div id="map"></div>
+    <!-- 📋 Daftar Pekerjaan -->
+    <div id="jobs"></div>
 
-  <h2>📆 Kalender Mingguan</h2>
-  <div id="weekCalendar" class="week-calendar"></div>
+    <!-- 📝 Form Posting -->
+    <form id="jobForm">
+      <h3>Pasang Lowongan Baru</h3>
+      <input type="text" id="nama" placeholder="Nama Anda" required />
+      <input type="text" id="judul" placeholder="Judul Pekerjaan" required />
+      <textarea id="deskripsi" placeholder="Deskripsi" required></textarea>
+      <input type="text" id="lokasi" placeholder="Lokasi" required />
+      <input type="number" id="upah" placeholder="Upah (Rp)" required />
+      <input type="url" id="gambar" placeholder="Link Gambar (opsional)" />
+      <button type="submit">Pasang Lowongan</button>
+    </form>
 
-  <h2>🔍 Filter Pekerjaan</h2>
-  <select id="filterJenis"><option value="">Semua Jenis</option><option value="Tanam">Tanam</option><option value="Panen">Panen</option><option value="Bajak">Bajak</option></select>
-  <input type="text" id="filterLokasi" placeholder="Cari Lokasi">
-  <input type="number" id="filterUpah" placeholder="Upah Minimal">
-  <button onclick="tampilkanDataFiltered()">🔍 Terapkan Filter</button>
+  </div>
 
-  <h2>📋 Daftar Lowongan</h2>
-  <div id="jobList">Memuat data...</div>
+  <footer>Developed by <a href="https://wa.me/6289607633666" target="_blank">Mr. Begox Ndangun</a></footer>
 
-  <h2>➕ Posting Lowongan Baru</h2>
-  <form id="jobForm">
-    <input type="text" id="judul" placeholder="Judul Pekerjaan" required>
-    <select id="jenis">
-      <option value="">Pilih Jenis</option>
-      <option value="Tanam">Tanam</option>
-      <option value="Panen">Panen</option>
-      <option value="Bajak">Bajak</option>
-    </select>
-    <input type="text" id="lokasi" placeholder="Contoh: Tuban, Jawa Timur" required>
-    <input type="date" id="tanggal" required>
-    <input type="number" id="upah" placeholder="Upah (Rp)" required>
-    <input type="text" id="wa" placeholder="No WhatsApp Anda" required>
-    <input type="file" id="gambar" accept="image/*">
-    <button type="submit">Kirim Lowongan</button>
-  </form>
-</div>
+  <!-- 🔗 Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-<footer>
-  Pengembang aplikasi oleh <a href="https://wa.me/6289607633666" target="_blank">Mr.Begox Ndangun</a>
-</footer>
-
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBk-lH9FOn2qzuJgjYJAhL6z4KuiCzI8zA",
-    authDomain: "jasa-pekerja-tani-tuban.firebaseapp.com",
-    projectId: "jasa-pekerja-tani-tuban",
-    storageBucket: "jasa-pekerja-tani-tuban.appspot.com",
-    messagingSenderId: "865622442089",
-    appId: "1:865622442089:web:20a149b7f101957594a2f8"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const storage = getStorage(app);
-
-  let semuaData = [];
-  const jobList = document.getElementById("jobList");
-  let map;
-
-  async function initMap(locations = []) {
-    if (!map) {
-      map = new google.maps.Map(document.getElementById("map"), {
-        zoom: 10,
-        center: { lat: -6.9, lng: 112.05 }
-      });
-    }
-    locations.forEach(async (item) => {
-      const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ address: item.lokasi }, (results, status) => {
-        if (status === "OK") {
-          new google.maps.Marker({
-            map,
-            position: results[0].geometry.location,
-            title: item.judul
-          });
-        }
-      });
-    });
-  }
-
-  function tampilkanMingguan() {
-    const container = document.getElementById("weekCalendar");
-    container.innerHTML = "";
-    const hari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
-    const now = new Date();
-    for (let i = 0; i < 7; i++) {
-      const d = new Date();
-      d.setDate(now.getDate() + i);
-      const tgl = d.toISOString().slice(0,10);
-      const div = document.createElement("div");
-      div.innerHTML = `<strong>${hari[d.getDay()]}</strong><br>${tgl}`;
-      div.onclick = () => tampilkanData(tgl);
-      container.appendChild(div);
-    }
-  }
-
-  function tampilkanData(filterTanggal = null) {
-    let hasil = semuaData;
-    if (filterTanggal) hasil = hasil.filter(item => item.tanggal === filterTanggal);
-    jobList.innerHTML = hasil.length === 0 ? "<p>Tidak ada lowongan.</p>" : "";
-    hasil.forEach(job => {
-      const div = document.createElement("div");
-      div.className = "job-card";
-      const mapURL = `https://www.google.com/maps?q=${encodeURIComponent(job.lokasi)}&output=embed`;
-      const waNomor = job.wa.replace(/^0/, "62");
-      div.innerHTML = `
-        <h3>${job.judul}</h3>
-        ${job.gambar ? `<img src="${job.gambar}" alt="Gambar Pekerjaan">` : ""}
-        <p><strong>Jenis:</strong> ${job.jenis}</p>
-        <p><strong>Lokasi:</strong> ${job.lokasi}</p>
-        <p><strong>Tanggal:</strong> ${job.tanggal}</p>
-        <p><strong>Upah:</strong> Rp${job.upah}</p>
-        <iframe src="${mapURL}" loading="lazy"></iframe>
-        <a href="https://wa.me/${waNomor}" target="_blank">Hubungi via WhatsApp</a>
-        <a href="https://wa.me/${waNomor}?text=Halo%2C+saya+tertarik+melamar+pekerjaan+${encodeURIComponent(job.judul)}+di+${encodeURIComponent(job.lokasi)}+pada+${job.tanggal}" target="_blank">Saya Tertarik</a>
-      `;
-      jobList.appendChild(div);
-    });
-    initMap(hasil);
-  }
-
-  function tampilkanDataFiltered() {
-    const jenis = document.getElementById("filterJenis").value;
-    const lokasi = document.getElementById("filterLokasi").value.toLowerCase();
-    const upah = parseInt(document.getElementById("filterUpah").value || 0);
-    const hasil = semuaData.filter(item => {
-      return (!jenis || item.jenis === jenis) &&
-             (!lokasi || item.lokasi.toLowerCase().includes(lokasi)) &&
-             (!upah || item.upah >= upah);
-    });
-    tampilkanData(null, hasil);
-  }
-
-  document.getElementById("jobForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const gambarFile = document.getElementById("gambar").files[0];
-    let gambarURL = "";
-
-    if (gambarFile) {
-      const gambarRef = ref(storage, `gambar/${Date.now()}_${gambarFile.name}`);
-      await uploadBytes(gambarRef, gambarFile);
-      gambarURL = await getDownloadURL(gambarRef);
-    }
-
-    const data = {
-      judul: document.getElementById("judul").value,
-      jenis: document.getElementById("jenis").value,
-      lokasi: document.getElementById("lokasi").value,
-      tanggal: document.getElementById("tanggal").value,
-      upah: parseInt(document.getElementById("upah").value),
-      wa: document.getElementById("wa").value,
-      gambar: gambarURL
+    const firebaseConfig = {
+      apiKey: "AIzaSyBk-lH9FOn2qzuJgjYJAhL6z4KuiCzI8zA",
+      authDomain: "jasa-pekerja-tani-tuban.firebaseapp.com",
+      projectId: "jasa-pekerja-tani-tuban",
+      storageBucket: "jasa-pekerja-tani-tuban.appspot.com",
+      messagingSenderId: "865622442089",
+      appId: "1:865622442089:web:20a149b7f101957594a2f8"
     };
-    await addDoc(collection(db, "pekerjaan"), data);
-    alert("Lowongan berhasil ditambahkan!");
-    e.target.reset();
-    ambilData();
-  });
 
-  async function ambilData() {
-    const snapshot = await getDocs(collection(db, "pekerjaan"));
-    semuaData = snapshot.docs.map(doc => doc.data());
-    tampilkanMingguan();
-    tampilkanData();
-  }
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  ambilData();
-</script>
+    const form = document.getElementById("jobForm");
+    const jobsContainer = document.getElementById("jobs");
+
+    async function loadJobs() {
+      const querySnapshot = await getDocs(collection(db, "pekerjaan"));
+      jobsContainer.innerHTML = "";
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        jobsContainer.innerHTML += `
+          <div class="job-card">
+            <h3>${data.judul}</h3>
+            <p>${data.deskripsi}</p>
+            <p>📍 ${data.lokasi} | 💸 Rp${data.upah}</p>
+            ${data.gambar ? `<img src="${data.gambar}" />` : ""}
+            <a href="https://wa.me/${data.wa || '62'}?text=Halo, saya tertarik dengan pekerjaan '${data.judul}' di lokasi ${data.lokasi}">Saya Tertarik</a>
+          </div>
+        `;
+      });
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await addDoc(collection(db, "pekerjaan"), {
+        nama: form.nama.value,
+        judul: form.judul.value,
+        deskripsi: form.deskripsi.value,
+        lokasi: form.lokasi.value,
+        upah: form.upah.value,
+        gambar: form.gambar.value,
+        wa: "6289607633666" // default WA kamu
+      });
+      form.reset();
+      loadJobs();
+    });
+
+    loadJobs();
+  </script>
 </body>
 </html>
