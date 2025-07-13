@@ -1,14 +1,23 @@
-self.addEventListener("install", function(e) {
+const cacheName = 'jasatani-v1';
+const filesToCache = [
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
+];
+
+self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open("jasa-tani-cache").then(function(cache) {
-      return cache.addAll(["./", "./index.html"]);
+    caches.open(cacheName).then(cache => {
+      return cache.addAll(filesToCache);
     })
   );
 });
 
-self.addEventListener("fetch", function(e) {
+self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(function(response) {
+    caches.match(e.request).then(response => {
       return response || fetch(e.request);
     })
   );
