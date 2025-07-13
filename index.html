@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Jasa Pekerja Tani Tuban</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#3b82f6">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -14,21 +16,21 @@
     h2 {
       color: #1e293b;
     }
-    form input, form button {
+    input, button {
       width: 100%;
       padding: 10px;
-      margin: 5px 0 15px 0;
+      margin-bottom: 12px;
       border: 1px solid #ccc;
       border-radius: 5px;
     }
-    form button {
+    button {
       background-color: #3b82f6;
       color: white;
       font-weight: bold;
       cursor: pointer;
       border: none;
     }
-    form button:hover {
+    button:hover {
       background-color: #2563eb;
     }
     .pekerjaan {
@@ -67,7 +69,10 @@
 
   <hr>
 
-  <h2>📋 Daftar Pekerjaan Tani</h2>
+  <h2>🔍 Cari Pekerjaan</h2>
+  <input type="text" id="search" placeholder="Cari judul atau lokasi...">
+
+  <h2>📋 Daftar Pekerjaan</h2>
   <div id="list-pekerjaan">Loading...</div>
 
   <script type="module">
@@ -93,37 +98,51 @@
     const db = getFirestore(app);
 
     const container = document.getElementById("list-pekerjaan");
-    container.innerHTML = "";
+    const allData = [];
 
-    // Menampilkan Data
-    const querySnapshot = await getDocs(collection(db, "pekerjaan"));
+    const tampilkanData = (dataList) => {
+      container.innerHTML = "";
+      if (dataList.length === 0) {
+        container.innerHTML = "<p>Tidak ada pekerjaan ditemukan.</p>";
+        return;
+      }
+      dataList.forEach((data) => {
+        const div = document.createElement("div");
+        div.className = "pekerjaan";
+        div.innerHTML = `
+          <h3>${data.judul}</h3>
+          <p><strong>Jenis:</strong> ${data.jenis}</p>
+          <p><strong>Tanggal:</strong> ${data.tanggal}</p>
+          <p><strong>Lokasi:</strong> ${data.lokasi}</p>
+          <p><strong>Upah:</strong> Rp${data.upah}</p>
+          <a class="wa-button" href="https://wa.me/${data.wa}?text=Halo%2C%20saya%20ingin%20melamar%20pekerjaan%20${encodeURIComponent(data.judul)}" target="_blank">
+            Kirim Lamaran via WhatsApp
+          </a>
+        `;
+        container.appendChild(div);
+      });
+    };
 
-    if (querySnapshot.empty) {
-      container.innerHTML = "<p>Tidak ada pekerjaan tersedia saat ini.</p>";
-    }
+    const snapshot = await getDocs(collection(db, "pekerjaan"));
+    snapshot.forEach((doc) => {
+      allData.push(doc.data());
+    });
+    tampilkanData(allData);
 
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      const div = document.createElement("div");
-      div.className = "pekerjaan";
-      div.innerHTML = `
-        <h3>${data.judul}</h3>
-        <p><strong>Jenis:</strong> ${data.jenis}</p>
-        <p><strong>Tanggal:</strong> ${data.tanggal}</p>
-        <p><strong>Lokasi:</strong> ${data.lokasi}</p>
-        <p><strong>Upah:</strong> Rp${data.upah}</p>
-        <a class="wa-button" href="https://wa.me/${data.wa}?text=Halo%2C%20saya%20ingin%20melamar%20pekerjaan%20${encodeURIComponent(data.judul)}" target="_blank">
-          Kirim Lamaran via WhatsApp
-        </a>
-      `;
-      container.appendChild(div);
+    // 🔍 Fitur pencarian
+    document.getElementById("search").addEventListener("input", (e) => {
+      const keyword = e.target.value.toLowerCase();
+      const hasil = allData.filter(item =>
+        item.judul.toLowerCase().includes(keyword) ||
+        item.lokasi.toLowerCase().includes(keyword)
+      );
+      tampilkanData(hasil);
     });
 
-    // Menyimpan Data dari Form
+    // Tambah pekerjaan baru
     const form = document.getElementById("form-pekerjaan");
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-
       const newData = {
         judul: document.getElementById("judul").value,
         jenis: document.getElementById("jenis").value,
@@ -132,7 +151,6 @@
         upah: parseInt(document.getElementById("upah").value),
         wa: document.getElementById("wa").value
       };
-
       try {
         await addDoc(collection(db, "pekerjaan"), newData);
         alert("✅ Pekerjaan berhasil ditambahkan!");
@@ -142,6 +160,13 @@
         alert("❌ Gagal menambahkan data.");
       }
     });
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js')
+        .then(() => console.log('✅ Service Worker registered'));
+    }
   </script>
 </body>
 </html>
