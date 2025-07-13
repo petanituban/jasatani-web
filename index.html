@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Jasa Pekerja Tani Tuban</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h2 {
+      color: #1e293b;
+    }
+    form input, form button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0 15px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    form button {
+      background-color: #3b82f6;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
+    form button:hover {
+      background-color: #2563eb;
+    }
+    .pekerjaan {
+      background: white;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .wa-button {
+      display: inline-block;
+      margin-top: 10px;
+      background: #22c55e;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 5px;
+      text-decoration: none;
+    }
+    .wa-button:hover {
+      background: #16a34a;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📝 Tambah Pekerjaan Baru</h2>
+  <form id="form-pekerjaan">
+    <input type="text" placeholder="Judul Pekerjaan" id="judul" required>
+    <input type="text" placeholder="Jenis (contoh: Panen)" id="jenis" required>
+    <input type="text" placeholder="Tanggal (contoh: 2025-07-15)" id="tanggal" required>
+    <input type="text" placeholder="Lokasi" id="lokasi" required>
+    <input type="number" placeholder="Upah (contoh: 100000)" id="upah" required>
+    <input type="text" placeholder="Nomor WhatsApp (628xxxx)" id="wa" required>
+    <button type="submit">+ Tambah Pekerjaan</button>
+  </form>
+
+  <hr>
+
+  <h2>📋 Daftar Pekerjaan Tani</h2>
+  <div id="list-pekerjaan">Loading...</div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      addDoc
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBk-lH9FOn2qzuJgjYJAhL6z4KuiCzI8zA",
+      authDomain: "jasa-pekerja-tani-tuban.firebaseapp.com",
+      projectId: "jasa-pekerja-tani-tuban",
+      storageBucket: "jasa-pekerja-tani-tuban.firebasestorage.app",
+      messagingSenderId: "865622442089",
+      appId: "1:865622442089:web:20a149b7f101957594a2f8",
+      measurementId: "G-2KLMXXT0TY"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const container = document.getElementById("list-pekerjaan");
+    container.innerHTML = "";
+
+    // Menampilkan Data
+    const querySnapshot = await getDocs(collection(db, "pekerjaan"));
+
+    if (querySnapshot.empty) {
+      container.innerHTML = "<p>Tidak ada pekerjaan tersedia saat ini.</p>";
+    }
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const div = document.createElement("div");
+      div.className = "pekerjaan";
+      div.innerHTML = `
+        <h3>${data.judul}</h3>
+        <p><strong>Jenis:</strong> ${data.jenis}</p>
+        <p><strong>Tanggal:</strong> ${data.tanggal}</p>
+        <p><strong>Lokasi:</strong> ${data.lokasi}</p>
+        <p><strong>Upah:</strong> Rp${data.upah}</p>
+        <a class="wa-button" href="https://wa.me/${data.wa}?text=Halo%2C%20saya%20ingin%20melamar%20pekerjaan%20${encodeURIComponent(data.judul)}" target="_blank">
+          Kirim Lamaran via WhatsApp
+        </a>
+      `;
+      container.appendChild(div);
+    });
+
+    // Menyimpan Data dari Form
+    const form = document.getElementById("form-pekerjaan");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const newData = {
+        judul: document.getElementById("judul").value,
+        jenis: document.getElementById("jenis").value,
+        tanggal: document.getElementById("tanggal").value,
+        lokasi: document.getElementById("lokasi").value,
+        upah: parseInt(document.getElementById("upah").value),
+        wa: document.getElementById("wa").value
+      };
+
+      try {
+        await addDoc(collection(db, "pekerjaan"), newData);
+        alert("✅ Pekerjaan berhasil ditambahkan!");
+        window.location.reload();
+      } catch (err) {
+        console.error(err);
+        alert("❌ Gagal menambahkan data.");
+      }
+    });
+  </script>
+</body>
+</html>
