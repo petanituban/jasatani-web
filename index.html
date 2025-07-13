@@ -3,97 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <title>Jasa Pekerja Tani Tuban</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#3b82f6">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#22c55e" />
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f3f4f6;
+      font-family: sans-serif;
       padding: 20px;
-      max-width: 600px;
-      margin: auto;
+      background: #f1f5f9;
     }
     h2 {
-      color: #1e293b;
+      color: #065f46;
     }
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 12px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
+    .filter {
+      background: #e0f2fe;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
     }
-    button {
-      background-color: #3b82f6;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      border: none;
+    .filter select, .filter input {
+      margin-right: 10px;
+      padding: 8px;
     }
-    button:hover {
-      background-color: #2563eb;
-    }
-    .pekerjaan {
+    .job {
       background: white;
       padding: 15px;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
-    .wa-button {
-      display: inline-block;
-      margin-top: 10px;
+    .job h3 {
+      margin-top: 0;
+    }
+    .job a {
       background: #22c55e;
       color: white;
       padding: 8px 12px;
-      border-radius: 5px;
       text-decoration: none;
-    }
-    .wa-button:hover {
-      background: #16a34a;
+      border-radius: 5px;
+      display: inline-block;
+      margin-top: 5px;
     }
   </style>
 </head>
 <body>
-
-  <h2>🔐 Admin Login</h2>
-  <div id="auth-section">
-    <div id="login-box">
-      <input type="email" id="email" placeholder="Email admin" required>
-      <input type="password" id="password" placeholder="Password" required>
-      <button id="login-btn">Login</button>
-    </div>
-    <div id="logout-box" style="display:none;">
-      <p>✅ Kamu sudah login sebagai admin</p>
-      <button id="logout-btn">Logout</button>
-    </div>
+  <h2>🔍 Cari Pekerjaan Tani</h2>
+  <div class="filter">
+    <select id="jenisFilter">
+      <option value="">Semua Jenis</option>
+      <option value="Tanam">Tanam</option>
+      <option value="Panen">Panen</option>
+      <option value="Bajak">Bajak</option>
+    </select>
+    <input type="text" id="lokasiFilter" placeholder="Lokasi (contoh: Tuban)">
+    <input type="date" id="tanggalFilter">
+    <button onclick="resetFilter()">Reset</button>
   </div>
 
-  <hr>
-
-  <h2>📝 Tambah Pekerjaan Baru</h2>
-  <form id="form-pekerjaan" style="display:none;">
-    <input type="text" placeholder="Judul Pekerjaan" id="judul" required>
-    <input type="text" placeholder="Jenis (contoh: Panen)" id="jenis" required>
-    <input type="text" placeholder="Tanggal (contoh: 2025-07-15)" id="tanggal" required>
-    <input type="text" placeholder="Lokasi" id="lokasi" required>
-    <input type="number" placeholder="Upah (contoh: 100000)" id="upah" required>
-    <input type="text" placeholder="Nomor WhatsApp (628xxxx)" id="wa" required>
-    <button type="submit">+ Tambah Pekerjaan</button>
-  </form>
-
-  <hr>
-
-  <h2>🔍 Cari Pekerjaan</h2>
-  <input type="text" id="search" placeholder="Cari judul atau lokasi...">
-
-  <h2>📋 Daftar Pekerjaan</h2>
-  <div id="list-pekerjaan">Loading...</div>
+  <div id="jobList">Memuat data...</div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBk-lH9FOn2qzuJgjYJAhL6z4KuiCzI8zA",
@@ -107,106 +77,65 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth(app);
-    const container = document.getElementById("list-pekerjaan");
-    const allData = [];
 
-    const tampilkanData = (dataList) => {
-      container.innerHTML = "";
-      if (dataList.length === 0) {
-        container.innerHTML = "<p>Tidak ada pekerjaan ditemukan.</p>";
+    const jobList = document.getElementById("jobList");
+
+    let semuaData = [];
+
+    async function fetchData() {
+      const snapshot = await getDocs(collection(db, "pekerjaan"));
+      semuaData = [];
+      snapshot.forEach(doc => {
+        semuaData.push(doc.data());
+      });
+      tampilkanData();
+    }
+
+    function tampilkanData() {
+      const jenis = document.getElementById("jenisFilter").value;
+      const lokasi = document.getElementById("lokasiFilter").value.toLowerCase();
+      const tanggal = document.getElementById("tanggalFilter").value;
+
+      let hasil = semuaData.filter(item => {
+        const cocokJenis = jenis === "" || item.jenis === jenis;
+        const cocokLokasi = lokasi === "" || item.lokasi.toLowerCase().includes(lokasi);
+        const cocokTanggal = tanggal === "" || item.tanggal >= tanggal;
+        return cocokJenis && cocokLokasi && cocokTanggal;
+      });
+
+      if (hasil.length === 0) {
+        jobList.innerHTML = "<p>Tidak ada pekerjaan ditemukan.</p>";
         return;
       }
-      dataList.forEach((data) => {
+
+      jobList.innerHTML = "";
+      hasil.forEach((item, i) => {
         const div = document.createElement("div");
-        div.className = "pekerjaan";
+        div.className = "job";
         div.innerHTML = `
-          <h3>${data.judul}</h3>
-          <p><strong>Jenis:</strong> ${data.jenis}</p>
-          <p><strong>Tanggal:</strong> ${data.tanggal}</p>
-          <p><strong>Lokasi:</strong> ${data.lokasi}</p>
-          <p><strong>Upah:</strong> Rp${data.upah}</p>
-          <a class="wa-button" href="https://wa.me/${data.wa}?text=Halo%2C%20saya%20ingin%20melamar%20pekerjaan%20${encodeURIComponent(data.judul)}" target="_blank">
-            Kirim Lamaran via WhatsApp
-          </a>
+          <h3>${item.judul}</h3>
+          <p><strong>Jenis:</strong> ${item.jenis}</p>
+          <p><strong>Lokasi:</strong> ${item.lokasi}</p>
+          <p><strong>Tanggal:</strong> ${item.tanggal}</p>
+          <p><strong>Upah:</strong> Rp${item.upah}</p>
+          <a href="https://wa.me/${item.wa.replace(/^0/, '62')}" target="_blank">Hubungi via WA</a>
         `;
-        container.appendChild(div);
+        jobList.appendChild(div);
       });
-    };
-
-    const snapshot = await getDocs(collection(db, "pekerjaan"));
-    snapshot.forEach((doc) => {
-      allData.push(doc.data());
-    });
-    tampilkanData(allData);
-
-    document.getElementById("search").addEventListener("input", (e) => {
-      const keyword = e.target.value.toLowerCase();
-      const hasil = allData.filter(item =>
-        item.judul.toLowerCase().includes(keyword) ||
-        item.lokasi.toLowerCase().includes(keyword)
-      );
-      tampilkanData(hasil);
-    });
-
-    const form = document.getElementById("form-pekerjaan");
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const newData = {
-        judul: document.getElementById("judul").value,
-        jenis: document.getElementById("jenis").value,
-        tanggal: document.getElementById("tanggal").value,
-        lokasi: document.getElementById("lokasi").value,
-        upah: parseInt(document.getElementById("upah").value),
-        wa: document.getElementById("wa").value
-      };
-      try {
-        await addDoc(collection(db, "pekerjaan"), newData);
-        alert("✅ Pekerjaan berhasil ditambahkan!");
-        window.location.reload();
-      } catch (err) {
-        console.error(err);
-        alert("❌ Gagal menambahkan data.");
-      }
-    });
-
-    const loginBox = document.getElementById("login-box");
-    const logoutBox = document.getElementById("logout-box");
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        form.style.display = "block";
-        loginBox.style.display = "none";
-        logoutBox.style.display = "block";
-      } else {
-        form.style.display = "none";
-        loginBox.style.display = "block";
-        logoutBox.style.display = "none";
-      }
-    });
-
-    document.getElementById("login-btn").addEventListener("click", async () => {
-      const email = document.getElementById("email").value;
-      const pass = document.getElementById("password").value;
-      try {
-        await signInWithEmailAndPassword(auth, email, pass);
-        alert("✅ Login berhasil");
-      } catch (err) {
-        alert("❌ Gagal login: " + err.message);
-      }
-    });
-
-    document.getElementById("logout-btn").addEventListener("click", async () => {
-      await signOut(auth);
-      alert("✅ Logout berhasil");
-    });
-  </script>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js')
-        .then(() => console.log('✅ Service Worker registered'));
     }
+
+    function resetFilter() {
+      document.getElementById("jenisFilter").value = "";
+      document.getElementById("lokasiFilter").value = "";
+      document.getElementById("tanggalFilter").value = "";
+      tampilkanData();
+    }
+
+    document.getElementById("jenisFilter").addEventListener("change", tampilkanData);
+    document.getElementById("lokasiFilter").addEventListener("input", tampilkanData);
+    document.getElementById("tanggalFilter").addEventListener("change", tampilkanData);
+
+    fetchData();
   </script>
 </body>
 </html>
