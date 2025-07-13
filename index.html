@@ -19,12 +19,12 @@
     .container { max-width: 800px; margin: auto; padding: 1rem; }
     .job-card { background: #fff; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 0 6px #ccc; }
     .job-card img { width: 100%; border-radius: 8px; margin-top: 0.5rem; }
-    .job-card iframe { width: 100%; height: 200px; margin-top: 0.5rem; border: none; border-radius: 8px; }
     .job-card a { display: inline-block; margin-top: 0.5rem; background: #22c55e; color: #fff; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; }
     form { background: #fff; padding: 1rem; border-radius: 10px; margin-top: 2rem; box-shadow: 0 0 6px #ccc; }
     input, select, textarea { width: 100%; padding: 0.5rem; margin-top: 0.5rem; margin-bottom: 1rem; border-radius: 6px; border: 1px solid #ccc; }
     button { background: #22c55e; color: white; padding: 0.75rem; border: none; width: 100%; border-radius: 6px; font-size: 1rem; cursor: pointer; }
     footer { text-align: center; padding: 1rem; font-size: 0.9rem; color: #64748b; }
+    footer a { color: #16a34a; text-decoration: none; }
     .filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem; }
     .filters select { flex: 1; }
   </style>
@@ -33,7 +33,7 @@
   <header>Jasa Pekerja Tani Tuban</header>
   <div class="container">
 
-    <!-- 🔍 Filter Lanjutan -->
+    <!-- 🔍 Filter -->
     <div class="filters">
       <select id="filter-kategori"><option value="">Kategori</option></select>
       <select id="filter-lokasi"><option value="">Lokasi</option></select>
@@ -43,13 +43,13 @@
     <!-- 📋 Daftar Pekerjaan -->
     <div id="jobs"></div>
 
-    <!-- 📝 Form Posting -->
+    <!-- 📝 Form Pasang -->
     <form id="jobForm">
       <h3>Pasang Lowongan Baru</h3>
       <input type="text" id="nama" placeholder="Nama Anda" required />
       <input type="text" id="judul" placeholder="Judul Pekerjaan" required />
       <textarea id="deskripsi" placeholder="Deskripsi" required></textarea>
-      <input type="text" id="lokasi" placeholder="Lokasi" required />
+      <input type="text" id="lokasi" placeholder="Lokasi (otomatis)" readonly required />
       <input type="number" id="upah" placeholder="Upah (Rp)" required />
       <input type="url" id="gambar" placeholder="Link Gambar (opsional)" />
       <button type="submit">Pasang Lowongan</button>
@@ -59,7 +59,7 @@
 
   <footer>Developed by <a href="https://wa.me/6289607633666" target="_blank">Mr. Begox Ndangun</a></footer>
 
-  <!-- 🔗 Firebase -->
+  <!-- 🔗 Firebase + Lokasi Otomatis -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
@@ -79,6 +79,26 @@
     const form = document.getElementById("jobForm");
     const jobsContainer = document.getElementById("jobs");
 
+    // Ambil Lokasi Otomatis
+    function ambilLokasi() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          document.getElementById("lokasi").value = `Lat: ${lat.toFixed(5)}, Lng: ${lon.toFixed(5)}`;
+        }, err => {
+          document.getElementById("lokasi").value = "Lokasi tidak ditemukan";
+        });
+      } else {
+        document.getElementById("lokasi").value = "Browser tidak mendukung lokasi";
+      }
+    }
+
+    window.addEventListener("load", () => {
+      ambilLokasi();
+      loadJobs();
+    });
+
     async function loadJobs() {
       const querySnapshot = await getDocs(collection(db, "pekerjaan"));
       jobsContainer.innerHTML = "";
@@ -90,7 +110,7 @@
             <p>${data.deskripsi}</p>
             <p>📍 ${data.lokasi} | 💸 Rp${data.upah}</p>
             ${data.gambar ? `<img src="${data.gambar}" />` : ""}
-            <a href="https://wa.me/${data.wa || '62'}?text=Halo, saya tertarik dengan pekerjaan '${data.judul}' di lokasi ${data.lokasi}">Saya Tertarik</a>
+            <a href="https://wa.me/${data.wa || '6289607633666'}?text=Halo, saya tertarik dengan pekerjaan '${data.judul}' di ${data.lokasi}">Saya Tertarik</a>
           </div>
         `;
       });
@@ -105,13 +125,12 @@
         lokasi: form.lokasi.value,
         upah: form.upah.value,
         gambar: form.gambar.value,
-        wa: "6289607633666" // default WA kamu
+        wa: "6289607633666"
       });
       form.reset();
+      ambilLokasi(); // ambil ulang
       loadJobs();
     });
-
-    loadJobs();
   </script>
 </body>
 </html>
