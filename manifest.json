@@ -1,0 +1,15 @@
+{
+  "name": "Jasa Pekerja Tani Tuban",
+  "short_name": "JasaTani",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3663/3663515.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
