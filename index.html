@@ -15,11 +15,14 @@
     .calendar .active { background: #22c55e; color: white; }
     .job-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
     .job-card h3 { margin: 0; color: #16a34a; }
+    .job-card img { max-width: 100%; border-radius: 10px; margin-top: 10px; }
     .job-card iframe { width: 100%; height: 200px; border: none; border-radius: 8px; margin-top: 10px; }
     .job-card a { display: inline-block; margin-top: 10px; background-color: #16a34a; color: white; padding: 8px 12px; border-radius: 5px; text-decoration: none; }
     form { background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-top: 40px; }
     input, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
     button { background-color: #22c55e; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+    footer { text-align: center; margin: 40px 0 20px; color: #64748b; font-size: 0.9rem; }
+    footer a { color: #16a34a; text-decoration: none; }
   </style>
 </head>
 <body>
@@ -29,6 +32,12 @@
 <div class="container">
   <h2>📅 Kalender Pekerjaan</h2>
   <div id="calendar" class="calendar"></div>
+
+  <h2>🔍 Filter Pekerjaan</h2>
+  <select id="filterJenis"><option value="">Semua Jenis</option><option value="Tanam">Tanam</option><option value="Panen">Panen</option><option value="Bajak">Bajak</option></select>
+  <input type="text" id="filterLokasi" placeholder="Cari Lokasi">
+  <input type="number" id="filterUpah" placeholder="Upah Minimal">
+  <button onclick="tampilkanDataFiltered()">🔍 Terapkan Filter</button>
 
   <h2>📋 Daftar Lowongan</h2>
   <div id="jobList">Memuat data...</div>
@@ -46,25 +55,32 @@
     <input type="date" id="tanggal" required>
     <input type="number" id="upah" placeholder="Upah (Rp)" required>
     <input type="text" id="wa" placeholder="No WhatsApp Anda" required>
+    <input type="file" id="gambar" accept="image/*">
     <button type="submit">Kirim Lowongan</button>
   </form>
 </div>
 
+<footer>
+  Pengembang aplikasi oleh <a href="https://wa.me/6289607633666" target="_blank">Mr.Begox Ndangun</a>
+</footer>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
   import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBk-lH9FOn2qzuJgjYJAhL6z4KuiCzI8zA",
     authDomain: "jasa-pekerja-tani-tuban.firebaseapp.com",
     projectId: "jasa-pekerja-tani-tuban",
-    storageBucket: "jasa-pekerja-tani-tuban.firebasestorage.app",
+    storageBucket: "jasa-pekerja-tani-tuban.appspot.com",
     messagingSenderId: "865622442089",
     appId: "1:865622442089:web:20a149b7f101957594a2f8"
   };
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const storage = getStorage(app);
 
   let semuaData = [];
   const jobList = document.getElementById("jobList");
@@ -98,7 +114,8 @@
   }
 
   function tampilkanData(filterTanggal = null) {
-    const hasil = filterTanggal ? semuaData.filter(item => item.tanggal === filterTanggal) : semuaData;
+    let hasil = semuaData;
+    if (filterTanggal) hasil = hasil.filter(item => item.tanggal === filterTanggal);
     jobList.innerHTML = hasil.length === 0 ? "<p>Tidak ada lowongan.</p>" : "";
     hasil.forEach(job => {
       const div = document.createElement("div");
@@ -106,6 +123,7 @@
       const mapURL = `https://www.google.com/maps?q=${encodeURIComponent(job.lokasi)}&output=embed`;
       div.innerHTML = `
         <h3>${job.judul}</h3>
+        ${job.gambar ? `<img src="${job.gambar}" alt="Gambar Pekerjaan">` : ""}
         <p><strong>Jenis:</strong> ${job.jenis}</p>
         <p><strong>Lokasi:</strong> ${job.lokasi}</p>
         <p><strong>Tanggal:</strong> ${job.tanggal}</p>
@@ -117,15 +135,37 @@
     });
   }
 
+  function tampilkanDataFiltered() {
+    const jenis = document.getElementById("filterJenis").value;
+    const lokasi = document.getElementById("filterLokasi").value.toLowerCase();
+    const upah = parseInt(document.getElementById("filterUpah").value || 0);
+    const hasil = semuaData.filter(item => {
+      return (!jenis || item.jenis === jenis) &&
+             (!lokasi || item.lokasi.toLowerCase().includes(lokasi)) &&
+             (!upah || item.upah >= upah);
+    });
+    tampilkanData(null, hasil);
+  }
+
   document.getElementById("jobForm").addEventListener("submit", async (e) => {
     e.preventDefault();
+    const gambarFile = document.getElementById("gambar").files[0];
+    let gambarURL = "";
+
+    if (gambarFile) {
+      const gambarRef = ref(storage, `gambar/${Date.now()}_${gambarFile.name}`);
+      await uploadBytes(gambarRef, gambarFile);
+      gambarURL = await getDownloadURL(gambarRef);
+    }
+
     const data = {
       judul: document.getElementById("judul").value,
       jenis: document.getElementById("jenis").value,
       lokasi: document.getElementById("lokasi").value,
       tanggal: document.getElementById("tanggal").value,
       upah: parseInt(document.getElementById("upah").value),
-      wa: document.getElementById("wa").value
+      wa: document.getElementById("wa").value,
+      gambar: gambarURL
     };
     await addDoc(collection(db, "pekerjaan"), data);
     alert("Lowongan berhasil ditambahkan!");
