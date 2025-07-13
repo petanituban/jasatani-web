@@ -1,94 +1,58 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Jasa Pekerja Tani Tuban</title>
-  <meta name="theme-color" content="#22c55e">
+  <meta name="theme-color" content="#22c55e" />
   <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f0fdf4;
-      color: #1e293b;
-    }
-    header {
-      background-color: #22c55e;
-      color: white;
-      padding: 20px;
-      text-align: center;
-      font-size: 1.5rem;
-      font-weight: bold;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .filters {
-      padding: 10px 20px;
-      text-align: center;
-    }
-    .filters button {
-      margin: 5px;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 20px;
-      background-color: #bbf7d0;
-      color: #065f46;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .filters button.active {
-      background-color: #22c55e;
-      color: white;
-    }
-    #jobList {
-      padding: 20px;
-      display: grid;
-      gap: 20px;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    }
-    .job-card {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .job-card h3 {
-      margin-top: 0;
-      font-size: 1.1rem;
-      color: #16a34a;
-    }
-    .job-card p {
-      margin: 5px 0;
-      font-size: 0.95rem;
-    }
-    .job-card a {
-      display: inline-block;
-      margin-top: 10px;
-      background: #16a34a;
-      color: white;
-      padding: 8px 12px;
-      border-radius: 6px;
-      text-decoration: none;
-    }
+    body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #f0fdf4; color: #1e293b; }
+    header { background-color: #22c55e; color: white; text-align: center; padding: 20px; font-size: 1.5rem; font-weight: bold; }
+    .container { max-width: 900px; margin: auto; padding: 20px; }
+    .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; margin-bottom: 20px; }
+    .calendar div { padding: 10px; background: #fff; border-radius: 6px; cursor: pointer; }
+    .calendar .header { font-weight: bold; background: #bbf7d0; }
+    .calendar .active { background: #22c55e; color: white; }
+    .job-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
+    .job-card h3 { margin: 0; color: #16a34a; }
+    .job-card iframe { width: 100%; height: 200px; border: none; border-radius: 8px; margin-top: 10px; }
+    .job-card a { display: inline-block; margin-top: 10px; background-color: #16a34a; color: white; padding: 8px 12px; border-radius: 5px; text-decoration: none; }
+    form { background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-top: 40px; }
+    input, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
+    button { background-color: #22c55e; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<header>
-  🌾 Jasa Pekerja Tani Tuban
-</header>
+<header>🌾 Jasa Pekerja Tani Tuban</header>
 
-<div class="filters">
-  <button onclick="filterKategori('')" class="active">Semua</button>
-  <button onclick="filterKategori('Tanam')">Tanam</button>
-  <button onclick="filterKategori('Panen')">Panen</button>
-  <button onclick="filterKategori('Bajak')">Bajak</button>
+<div class="container">
+  <h2>📅 Kalender Pekerjaan</h2>
+  <div id="calendar" class="calendar"></div>
+
+  <h2>📋 Daftar Lowongan</h2>
+  <div id="jobList">Memuat data...</div>
+
+  <h2>➕ Posting Lowongan Baru</h2>
+  <form id="jobForm">
+    <input type="text" id="judul" placeholder="Judul Pekerjaan" required>
+    <select id="jenis">
+      <option value="">Pilih Jenis</option>
+      <option value="Tanam">Tanam</option>
+      <option value="Panen">Panen</option>
+      <option value="Bajak">Bajak</option>
+    </select>
+    <input type="text" id="lokasi" placeholder="Contoh: Tuban, Jawa Timur" required>
+    <input type="date" id="tanggal" required>
+    <input type="number" id="upah" placeholder="Upah (Rp)" required>
+    <input type="text" id="wa" placeholder="No WhatsApp Anda" required>
+    <button type="submit">Kirim Lowongan</button>
+  </form>
 </div>
-
-<div id="jobList">Memuat data...</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBk-lH9FOn2qzuJgjYJAhL6z4KuiCzI8zA",
@@ -96,8 +60,7 @@
     projectId: "jasa-pekerja-tani-tuban",
     storageBucket: "jasa-pekerja-tani-tuban.firebasestorage.app",
     messagingSenderId: "865622442089",
-    appId: "1:865622442089:web:20a149b7f101957594a2f8",
-    measurementId: "G-2KLMXXT0TY"
+    appId: "1:865622442089:web:20a149b7f101957594a2f8"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -105,49 +68,79 @@
 
   let semuaData = [];
   const jobList = document.getElementById("jobList");
+  const calendarEl = document.getElementById("calendar");
 
-  async function ambilData() {
-    const snapshot = await getDocs(collection(db, "pekerjaan"));
-    semuaData = [];
-    snapshot.forEach(doc => semuaData.push(doc.data()));
-    tampilkanData("");
+  function generateCalendar(jobs) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    calendarEl.innerHTML = "";
+    ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"].forEach(d => {
+      const day = document.createElement("div");
+      day.className = "header";
+      day.textContent = d;
+      calendarEl.appendChild(day);
+    });
+
+    const firstDay = new Date(year, month, 1).getDay();
+    for (let i = 0; i < firstDay; i++) {
+      calendarEl.appendChild(document.createElement("div"));
+    }
+    for (let day = 1; day <= daysInMonth; day++) {
+      const tanggal = `${year}-${(month+1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+      const cell = document.createElement("div");
+      cell.textContent = day;
+      cell.onclick = () => tampilkanData(tanggal);
+      calendarEl.appendChild(cell);
+    }
   }
 
-  function tampilkanData(filterJenis) {
-    const tombol = document.querySelectorAll(".filters button");
-    tombol.forEach(btn => btn.classList.remove("active"));
-    const aktif = Array.from(tombol).find(btn => btn.textContent === filterJenis || (filterJenis === "" && btn.textContent === "Semua"));
-    if (aktif) aktif.classList.add("active");
-
-    const hasil = semuaData.filter(item => !filterJenis || item.jenis === filterJenis);
-
-    if (hasil.length === 0) {
-      jobList.innerHTML = "<p style='padding:10px;'>Tidak ada pekerjaan ditemukan.</p>";
-      return;
-    }
-
-    jobList.innerHTML = "";
-    hasil.forEach(item => {
+  function tampilkanData(filterTanggal = null) {
+    const hasil = filterTanggal ? semuaData.filter(item => item.tanggal === filterTanggal) : semuaData;
+    jobList.innerHTML = hasil.length === 0 ? "<p>Tidak ada lowongan.</p>" : "";
+    hasil.forEach(job => {
       const div = document.createElement("div");
       div.className = "job-card";
+      const mapURL = `https://www.google.com/maps?q=${encodeURIComponent(job.lokasi)}&output=embed`;
       div.innerHTML = `
-        <h3>${item.judul}</h3>
-        <p><strong>Jenis:</strong> ${item.jenis}</p>
-        <p><strong>Lokasi:</strong> ${item.lokasi}</p>
-        <p><strong>Tanggal:</strong> ${item.tanggal}</p>
-        <p><strong>Upah:</strong> Rp${item.upah}</p>
-        <a href="https://wa.me/${item.wa.replace(/^0/, '62')}" target="_blank">Hubungi via WA</a>
+        <h3>${job.judul}</h3>
+        <p><strong>Jenis:</strong> ${job.jenis}</p>
+        <p><strong>Lokasi:</strong> ${job.lokasi}</p>
+        <p><strong>Tanggal:</strong> ${job.tanggal}</p>
+        <p><strong>Upah:</strong> Rp${job.upah}</p>
+        <iframe src="${mapURL}" loading="lazy"></iframe>
+        <a href="https://wa.me/${job.wa.replace(/^0/, '62')}" target="_blank">Hubungi via WhatsApp</a>
       `;
       jobList.appendChild(div);
     });
   }
 
-  function filterKategori(kategori) {
-    tampilkanData(kategori);
+  document.getElementById("jobForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const data = {
+      judul: document.getElementById("judul").value,
+      jenis: document.getElementById("jenis").value,
+      lokasi: document.getElementById("lokasi").value,
+      tanggal: document.getElementById("tanggal").value,
+      upah: parseInt(document.getElementById("upah").value),
+      wa: document.getElementById("wa").value
+    };
+    await addDoc(collection(db, "pekerjaan"), data);
+    alert("Lowongan berhasil ditambahkan!");
+    e.target.reset();
+    ambilData();
+  });
+
+  async function ambilData() {
+    const snapshot = await getDocs(collection(db, "pekerjaan"));
+    semuaData = snapshot.docs.map(doc => doc.data());
+    generateCalendar(semuaData);
+    tampilkanData();
   }
 
   ambilData();
 </script>
-
 </body>
 </html>
