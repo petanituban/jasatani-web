@@ -5,27 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Jasa Lowongan Kerja Tani Binangun – Pasang & Cari Pekerja</title>
 
-  <!-- SEO & Google Search Console -->
+  <!-- SEO -->
   <meta name="description" content="Pasang dan cari lowongan kerja tani di wilayah Binangun dan sekitarnya. Gratis, cepat, dan mudah. Cocok untuk petani serta pencari kerja harian.">
   <meta name="keywords"    content="lowongan tani, pekerjaan tani, jasa petani, pekerja harian, Binangun, pertanian, pasang lowongan tani, petani tuban">
   <meta name="author"      content="Biresty Management">
-  <meta name="google-site-verification" content="iLydJKgLYAblyxR9n-gIHCiSOGQCSFvNyMe9zDHH9Ow">
 
-  <!-- Open‑Graph -->
-  <meta property="og:title"       content="Lowongan Tani Wilayah Binangun">
-  <meta property="og:description" content="Cari & pasang lowongan kerja pertanian dengan mudah. Cocok untuk warga desa, petani, dan pencari kerja lokal.">
-  <meta property="og:image"       content="https://petanituban.github.io/jasatani-web/Logo.png">
-  <meta property="og:url"         content="https://petanituban.github.io/jasatani-web/">
-  <meta name="theme-color"        content="#22c55e">
-  <link rel="icon" href="Logo.png">
+  <!-- Google Search Console -->
+  <meta name="google-site-verification" content="iLydJKgLYAblyxR9n-gIHCiSOGQCSFvNyMe9zDHH9Ow" />
+
+  <!-- Open Graph -->
+  <meta property="og:title"       content="Lowongan Tani Wilayah Binangun" />
+  <meta property="og:description" content="Cari & pasang lowongan kerja pertanian dengan mudah. Cocok untuk warga desa, petani, dan pencari kerja lokal." />
+  <meta property="og:image"       content="https://petanituban.github.io/jasatani-web/Logo.png" />
+  <meta property="og:url"         content="https://petanituban.github.io/jasatani-web/" />
+  <meta name="theme-color"        content="#22c55e" />
+
+  <link rel="icon" href="Logo.png" />
 
   <style>
     body{font-family:sans-serif;margin:0;background:#f0fdf4;color:#1e293b}
+    /* HEADER */
     header{background:#22c55e;color:#fff;padding:10px 20px}
     header .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
     header img{height:40px;border-radius:6px}
     header h1{font-size:1.1rem;margin:0;line-height:1.4}
     header span.sub{font-size:.9rem;font-weight:normal}
+    /* FORM & LIST */
     .container{max-width:800px;margin:auto;padding:20px}
     form{background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.1);margin-bottom:30px}
     input,textarea{width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;border-radius:6px}
@@ -33,9 +38,10 @@
     .job-card{background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 4px rgba(0,0,0,.1);margin-bottom:20px}
     .job-card.terisi{opacity:.5}
     .job-card a{display:inline-block;margin-top:10px;background:#16a34a;color:#fff;padding:8px 12px;border-radius:6px;text-decoration:none}
-    footer{text-align:center;font-size:.9rem;color:#6b7280;margin:40px 0}
+    /* ABOUT & FOOTER */
     .about{text-align:center;margin:40px auto}
     .about img{width:100px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.2)}
+    footer{text-align:center;font-size:.9rem;color:#6b7280;margin:40px 0}
   </style>
 </head>
 <body>
@@ -53,7 +59,7 @@
 
   <!-- DISCLAIMER -->
   <div style="background:#fff4dc;color:#92400e;padding:10px;text-align:center;font-size:.9rem">
-    ⚠️ <strong>Disclaimer:</strong> Segala bentuk kerugian atau kecurangan dari pihak pemberi dan penerima kerja adalah tanggung jawab masing-masing.
+    ⚠️ <strong>Disclaimer:</strong> Segala bentuk kerugian atau kecurangan dari pihak pemberi dan penerima kerja adalah tanggung jawab masing‑masing.
   </div>
 
   <!-- FORM & LIST -->
@@ -79,16 +85,15 @@
     <p style="font-weight:bold;margin-top:10px">Biresty Management</p>
   </div>
 
-  <footer>
-    Dibuat oleh <a href="https://wa.me/6289607633666" target="_blank">Mr. Begox Ndangun</a>
-  </footer>
+  <footer>Dibuat oleh <a href="https://wa.me/6289607633666" target="_blank">Mr. Begox Ndangun</a></footer>
 
-  <!-- FIREBASE (tanpa login) -->
+  <!-- FIREBASE -->
   <script type="module">
     import { initializeApp }                     from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getFirestore, collection, addDoc,
-             getDocs }                           from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+             getDocs, query, orderBy }           from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
+    /* Firebase config */
     const firebaseConfig = {
       apiKey: "AIzaSyCWI_6BARGGu8WfHwyAU7WR-KCaTwNIB30",
       authDomain: "jasa-pekerja-tani-tuban-6a972.firebaseapp.com",
@@ -97,11 +102,10 @@
       messagingSenderId: "202591906654",
       appId: "1:202591906654:web:754c531b44508821033dcf"
     };
-
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
-    // Kirim form (tanpa login)
+    /* Kirim form */
     document.getElementById('formPekerjaan').addEventListener('submit', async e => {
       e.preventDefault();
       const data = {
@@ -120,22 +124,27 @@
       } catch(e){ alert("❌ Gagal: "+e.message); }
     });
 
+    /* Tampilkan daftar (filter tanggal & urut) */
     async function tampilkanLowongan(){
       const box=document.getElementById('daftarLowongan');
       box.innerHTML="<p>Memuat...</p>";
+      const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+
       try{
-        const snap=await getDocs(collection(db,'pekerjaan'));
+        const q = query(collection(db,'pekerjaan'), orderBy('tanggal'));
+        const snap = await getDocs(q);
         box.innerHTML="";
         snap.forEach(d=>{
           const p=d.data();
-          box.innerHTML+=`
-            <div class="job-card${p.status==='terisi'?' terisi':''}">
-               <h3>${p.judul}</h3>
-               <p><strong>Tanggal:</strong> ${p.tanggal}</p>
-               <p><strong>Upah:</strong> ${p.upah}</p>
-               <p>${p.deskripsi}</p>
-               <a href="https://wa.me/${p.wa}" target="_blank">📲 Saya Tertarik</a>
-               ${p.status==='terisi' ? '<p><em>❌ Sudah Terisi</em></p>' : ''}
+          if(p.tanggal < today) return;            // lewati lowongan kadaluwarsa
+
+          box.innerHTML += `
+            <div class="job-card">
+              <h3>${p.judul}</h3>
+              <p><strong>Tanggal:</strong> ${p.tanggal}</p>
+              <p><strong>Upah:</strong> ${p.upah}</p>
+              <p>${p.deskripsi}</p>
+              <a href="https://wa.me/${p.wa}" target="_blank">📲 Saya Tertarik</a>
             </div>`;
         });
         if(!box.innerHTML) box.innerHTML="<p>Belum ada lowongan.</p>";
